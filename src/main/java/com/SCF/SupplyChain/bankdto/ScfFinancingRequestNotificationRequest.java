@@ -6,6 +6,9 @@ import lombok.Data;
 public class ScfFinancingRequestNotificationRequest {
 	
 	
+	
+	
+	
 	private String senderName;
     private String message;
     private String invoiceNumber;
