@@ -1,8 +1,12 @@
 package com.SCF.SupplyChain.service;
+import java.math.BigDecimal;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -11,31 +15,50 @@ import javax.transaction.Transactional;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.SCF.SupplyChain.Entity.BusinessFinanceDetailsS4Entity;
 import com.SCF.SupplyChain.Entity.BusinessinformationS2Entity;
 import com.SCF.SupplyChain.Entity.CollateralCreditworthinessS6Entity;
 import com.SCF.SupplyChain.Entity.CommonDemographicS1Entity;
+import com.SCF.SupplyChain.Entity.EarlyPaymentRequestEntity;
 import com.SCF.SupplyChain.Entity.OrgDetailsEntity;
 import com.SCF.SupplyChain.Entity.OrgKycGroupDetailsEntity;
 import com.SCF.SupplyChain.Entity.OrgRoleEntity;
 import com.SCF.SupplyChain.Entity.ProprietorDetailsS3Entity;
 import com.SCF.SupplyChain.Entity.SCFuserupdatedetailsS7Entity;
 import com.SCF.SupplyChain.Entity.ScfApplicationEntity;
+import com.SCF.SupplyChain.Entity.ScfBankFundDisbursementEntity;
 import com.SCF.SupplyChain.Entity.ScfBankRegistrationEntity;
 import com.SCF.SupplyChain.Entity.ScfBankRoleEntity;
 import com.SCF.SupplyChain.Entity.ScfFinancingRequestEntity;
 import com.SCF.SupplyChain.Entity.ScfFinancingRequestNotificationEntity;
+import com.SCF.SupplyChain.Entity.ScfSupplierBankOfferEntity;
+import com.SCF.SupplyChain.Entity.ScfSupplierRegistrationEntity;
+import com.SCF.SupplyChain.Entity.ScfSupplierSelectedbankOfferEntity;
 import com.SCF.SupplyChain.Entity.ScfUserdetailsEntity;
+import com.SCF.SupplyChain.Entity.ScfbankFinancingOfferTermsEntity;
 import com.SCF.SupplyChain.Entity.ScfbankRiskAssessmentEntity;
 import com.SCF.SupplyChain.Entity.SupplyChainDetailsS5Entity;
 import com.SCF.SupplyChain.Entity.UserRoleEntity;
 import com.SCF.SupplyChain.Entity.UserSession;
+import com.SCF.SupplyChain.Supplierdto.EarlyPaymentRequest;
+import com.SCF.SupplyChain.Supplierdto.EarlyPaymentResponse;
+import com.SCF.SupplyChain.Supplierdto.ScfAddBankOfferRequest;
+import com.SCF.SupplyChain.Supplierdto.ScfAddInvoiceBankOfferRequest;
+import com.SCF.SupplyChain.Supplierdto.ScfSelectBankOfferRequest;
+import com.SCF.SupplyChain.Supplierdto.ScfSupplierBankOfferResponse;
+import com.SCF.SupplyChain.Supplierdto.ScfSupplierRegistrationRequest;
+import com.SCF.SupplyChain.Supplierdto.ScfSupplierRegistrationResponse;
+import com.SCF.SupplyChain.bankdto.ScfBankFundDisbursementRequest;
+import com.SCF.SupplyChain.bankdto.ScfBankFundDisbursementResponse;
 import com.SCF.SupplyChain.bankdto.ScfBankRegistrationRequest;
 import com.SCF.SupplyChain.bankdto.ScfBankRegistrationResponse;
 import com.SCF.SupplyChain.bankdto.ScfFinancingRequestNotificationRequest;
 import com.SCF.SupplyChain.bankdto.ScfFinancingRequestNotificationResponse;
+import com.SCF.SupplyChain.bankdto.ScfbankFinancingOfferTermsRequest;
+import com.SCF.SupplyChain.bankdto.ScfbankFinancingOfferTermsResponse;
 import com.SCF.SupplyChain.bankdto.ScfbankRiskAssessmentRequest;
 import com.SCF.SupplyChain.bankdto.ScfbankRiskAssessmentResponse;
 import com.SCF.SupplyChain.dto.BusinessFinanceDetailsS4Request;
@@ -72,17 +95,23 @@ import com.SCF.SupplyChain.repository.BusinessFinanceDetailsS4Repository;
 import com.SCF.SupplyChain.repository.BusinessinformationS2Repository;
 import com.SCF.SupplyChain.repository.CollateralCreditworthinessS6Repository;
 import com.SCF.SupplyChain.repository.CommonDemographicS1Repository;
+import com.SCF.SupplyChain.repository.EarlyPaymentRequestRepository;
 import com.SCF.SupplyChain.repository.OrgDetailsRepository;
 import com.SCF.SupplyChain.repository.OrgKycGroupDetailsRepository;
 import com.SCF.SupplyChain.repository.OrgRoleRepository;
 import com.SCF.SupplyChain.repository.ProprietorDetailsS3Repository;
 import com.SCF.SupplyChain.repository.SCFuserupdatedetailsS7Repository;
 import com.SCF.SupplyChain.repository.ScfApplicationRepository;
+import com.SCF.SupplyChain.repository.ScfBankFundDisbursementRepository;
 import com.SCF.SupplyChain.repository.ScfBankRegistrationRepository;
 import com.SCF.SupplyChain.repository.ScfBankRoleRepository;
 import com.SCF.SupplyChain.repository.ScfFinancingRequestNotificationRepository;
 import com.SCF.SupplyChain.repository.ScfFinancingRequestRepository;
+import com.SCF.SupplyChain.repository.ScfSupplierBankOfferRepository;
+import com.SCF.SupplyChain.repository.ScfSupplierRegistrationRepository;
+import com.SCF.SupplyChain.repository.ScfSupplierSelectedbankOfferRepository;
 import com.SCF.SupplyChain.repository.ScfUserdetailsRepository;
+import com.SCF.SupplyChain.repository.ScfbankFinancingOfferTermsRepository;
 import com.SCF.SupplyChain.repository.ScfbankRiskAssessmentRepository;
 import com.SCF.SupplyChain.repository.SupplyChainDetailsS5Repository;
 import com.SCF.SupplyChain.repository.UserRoleRepository;
@@ -120,7 +149,14 @@ public class SupplyChainService {
     private final ScfBankRoleRepository scfBankRoleRepository;
     private final ScfFinancingRequestNotificationRepository scfFinancingRequestNotificationRepository;
     private final ScfbankRiskAssessmentRepository scfbankRiskAssessmentRepository;
+    private final ScfbankFinancingOfferTermsRepository scfbankFinancingOfferTermsRepository;
+    private final ScfBankFundDisbursementRepository scfBankFundDisbursementRepository;
     
+    
+    private final ScfSupplierRegistrationRepository scfSupplierRegistrationRepository;
+    private final ScfSupplierBankOfferRepository scfSupplierBankOfferRepository;
+    private final ScfSupplierSelectedbankOfferRepository scfSupplierSelectedbankOfferRepository;
+    private final EarlyPaymentRequestRepository earlyPaymentRequestRepository;
     
     
 
@@ -144,7 +180,13 @@ public class SupplyChainService {
             ScfBankRoleRepository scfBankRoleRepository,
             ScfFinancingRequestNotificationRepository scfFinancingRequestNotificationRepository,
             ScfbankRiskAssessmentRepository scfbankRiskAssessmentRepository,
-            ScfFinancingRequestRepository scfFinancingRequestRepository) 
+            ScfFinancingRequestRepository scfFinancingRequestRepository,
+            ScfbankFinancingOfferTermsRepository scfbankFinancingOfferTermsRepository,
+            ScfBankFundDisbursementRepository scfBankFundDisbursementRepository,
+            ScfSupplierRegistrationRepository scfSupplierRegistrationRepository,
+            ScfSupplierBankOfferRepository scfSupplierBankOfferRepository,
+            ScfSupplierSelectedbankOfferRepository scfSupplierSelectedbankOfferRepository,
+            EarlyPaymentRequestRepository earlyPaymentRequestRepository) 
     {
     	
     	
@@ -167,6 +209,13 @@ public class SupplyChainService {
         this.scfFinancingRequestNotificationRepository = scfFinancingRequestNotificationRepository;
         this.scfbankRiskAssessmentRepository = scfbankRiskAssessmentRepository;
         this.scfFinancingRequestRepository = scfFinancingRequestRepository;
+        this.scfbankFinancingOfferTermsRepository = scfbankFinancingOfferTermsRepository;
+        this.scfBankFundDisbursementRepository = scfBankFundDisbursementRepository;
+        this.scfSupplierRegistrationRepository = scfSupplierRegistrationRepository;
+        this.scfSupplierBankOfferRepository = scfSupplierBankOfferRepository;
+        this.scfSupplierSelectedbankOfferRepository = scfSupplierSelectedbankOfferRepository;
+        this.earlyPaymentRequestRepository = earlyPaymentRequestRepository; 
+        
         
    
     }
@@ -179,6 +228,7 @@ public class SupplyChainService {
     
     @Transactional
     public LoginResponse authenticateUser(LoginRequest request) {
+    	logger.info("Authenticating user with phone number: {}", request.getPhone_no());
         Optional<UserSession> existingSession = userSessionRepository.findByPhoneNo(request.getPhone_no());
         String sessionId = UUID.randomUUID().toString().replace("-", "");
 
@@ -187,6 +237,7 @@ public class SupplyChainService {
 
          // ✅ Check password
             if (userSession.getPassword() == null || !userSession.getPassword().equals(request.getPassword())) {
+            	logger.warn("Invalid password attempt for phone number: {}", request.getPhone_no());
                 return new LoginResponse(null, "error", "Invalid password");
             }
 
@@ -196,7 +247,9 @@ public class SupplyChainService {
                 userSession.setIsActive(true);
                 userSession.setSessionIdExpiryTime(LocalDateTime.now().plusMinutes(SESSION_EXPIRY_MINUTES));
                 userSessionRepository.save(userSession);
+                logger.info("Session created for user: {}", request.getPhone_no());
             } else {
+            	logger.warn("User already logged in: {}", request.getPhone_no());
                 return new LoginResponse(userSession.getSessionId(), "error", "User is already logged in");
             }
 
@@ -210,6 +263,7 @@ public class SupplyChainService {
             userSession.setIsActive(true);
             userSession.setSessionIdExpiryTime(LocalDateTime.now().plusMinutes(SESSION_EXPIRY_MINUTES));
             userSessionRepository.save(userSession);
+            logger.info("New user session created for phone number: {}", request.getPhone_no());
         }
 
         return new LoginResponse(sessionId, "success", "User authenticated successfully");
@@ -217,10 +271,12 @@ public class SupplyChainService {
 
 
     public MobileAuthKeyResponse getMobileAuthKey(MobileAuthKeyRequest request) {
+    	logger.info("Generating mobile auth key for sessionId: {}", request.getSessionid());
         List<UserSession> userSessions = userSessionRepository.findBySessionId(request.getSessionid());
         if (userSessions.isEmpty() || 
             userSessions.get(0).getSessionIdExpiryTime() == null || 
             userSessions.get(0).getSessionIdExpiryTime().isBefore(LocalDateTime.now())) {
+        	logger.warn("Invalid or expired session ID: {}", request.getSessionid());
             return new MobileAuthKeyResponse("", "error", "Session ID incorrect");
         }
 
@@ -231,15 +287,17 @@ public class SupplyChainService {
         userSession.setAuthKey(authKey);
         userSession.setAuthKeyExpiryTime(authKeyExpiryTime);
         userSessionRepository.save(userSession);
-
+        logger.info("Auth key generated for sessionId: {}", request.getSessionid());
         return new MobileAuthKeyResponse(authKey, "success", "Mobile auth key generated successfully");
     }
 
     
     public String logoutUser(String sessionId) {
+    	logger.info("Logging out session ID: {}", sessionId);
         List<UserSession> userSessions = userSessionRepository.findBySessionId(sessionId);
         
         if (userSessions.isEmpty()) {
+        	logger.warn("Logout failed: Invalid session ID: {}", sessionId);
             return "Invalid session ID";
         }
 
@@ -248,7 +306,7 @@ public class SupplyChainService {
             session.setLogoutTime(LocalDateTime.now());
             userSessionRepository.save(session);
         }
-
+        logger.info("User logged out successfully for session ID: {}", sessionId);
         return "User logged out successfully";
     }
 
@@ -258,6 +316,7 @@ public class SupplyChainService {
     
     public ScfinvoiceapplicationDedupeResponse checkInvoiceNumber(ScfinvoiceapplicationDedupeRequest request) {
     	String invoiceNumber = request.getInvoiceNumber();
+    	logger.info("Checking for existing invoice number: {}", invoiceNumber);
     	CommonDemographicS1Entity existingEntity = demographicRepository.findByInvoiceNumber(invoiceNumber);
         
         
@@ -267,9 +326,11 @@ public class SupplyChainService {
         if (existingEntity != null) {
             response.setExists(true);
             response.setMessage("Invoice number already exists in the database.");
+            logger.warn("Duplicate invoice number found: {}", invoiceNumber);
         } else {
             response.setExists(false);
             response.setMessage("Invoice number is not found in the database.");
+            logger.info("Invoice number is unique: {}", invoiceNumber);
         }
 
         return response;
@@ -287,14 +348,6 @@ public class SupplyChainService {
     @Transactional
     public CommonDemographicS1Response saveDemographicDetails(CommonDemographicS1Request request) {
         logger.info("Processing demographic details for Invoice number: {}", request.getInvoiceNumber());
-
-       /* if (demographicRepository.findByPhoneNo(request.getPhoneNo()) != null) {
-            throw new PhoneNumberAlreadyExistsException("Phone number already exists.");
-        }
-
-        if (demographicRepository.findByEmailId(request.getEmailId()) != null) {
-            throw new EmailIdAlreadyExistsException("Email Id already exists.");
-        }*/
         
         if (demographicRepository.findByInvoiceNumber(request.getInvoiceNumber()) != null) {
             throw new InvoiceNumberAlreadyExist("Invoice Number already exists.");
@@ -327,7 +380,11 @@ public class SupplyChainService {
      // Create the response object
         CommonDemographicS1Response response = new CommonDemographicS1Response();
         response.setMessage("New user created successfully.");
-        response.setUser(savedEntity);
+        //response.setUser(savedEntity);
+        response.setInvoiceNumber(savedEntity.getInvoiceNumber());
+        response.setFirstName(savedEntity.getFirstName());
+        response.setLastName(savedEntity.getLastName());
+        response.setPhoneNo(savedEntity.getPhoneNo());
 
         logger.info("User details saved successfully for invoice number: {}", request.getInvoiceNumber());
         return response;
@@ -367,7 +424,7 @@ public class SupplyChainService {
     	 // Create the response object
             BusinessinformationS2Response response = new BusinessinformationS2Response();
             response.setMessage("Business information saved successfully.");
-            response.setUser(savedEntity);
+            //response.setUser(savedEntity);
 
             logger.info("Business details saved successfully for This Invoice number: {}", request.getBusinessContactPersonMobNo());
             return response;
@@ -412,7 +469,7 @@ public class SupplyChainService {
 	 // Create the response object
         ProprietorDetailsS3Response response = new ProprietorDetailsS3Response();
         response.setMessage("Propriter/CEO Details saved successfully.");
-        response.setUser(savedEntity);
+        //response.setUser(savedEntity);
 
         logger.info("Propriter/CEO details saved successfully for Invoice number: {}", request.getFullNameProprietor());
         return response;
@@ -455,7 +512,7 @@ public class SupplyChainService {
      // Create the response object
         BusinessFinanceDetailsS4Response response = new BusinessFinanceDetailsS4Response();
         response.setMessage("Business information saved successfully.");
-        response.setUser(savedEntity);
+        //response.setUser(savedEntity);
 
         logger.info("Business finance details saved successfully for mobile number: {}", request.getPanEntity());
         return response;
@@ -493,7 +550,7 @@ public class SupplyChainService {
      // Create the response object
         SupplyChainDetailsS5Response response = new SupplyChainDetailsS5Response();
         response.setMessage("Supply chain information saved successfully.");
-        response.setUser(savedEntity);
+        //response.setUser(savedEntity);
 
         logger.info("Supply Chain details saved successfully for mobile number: {}", request.getSupplierName());
         return response;
@@ -538,7 +595,7 @@ public class SupplyChainService {
      // Create the response object
         CollateralCreditworthinessS6Response response = new CollateralCreditworthinessS6Response();
         response.setMessage("Colateral Credit information saved successfully.");
-        response.setUser(savedEntity);
+        //response.setUser(savedEntity);
 
         logger.info("Colateral Credit saved successfully for mobile number: {}", request.getTypeOfCollateral());
         return response;
@@ -926,7 +983,10 @@ public class SupplyChainService {
        
         
 /////////////////////////////////////SCF Bank Side Service Class////////////////////////////////////////  
+      
         
+        
+        ////////////////////Scf Bank Screen Registration API Service class////////////////
         
         @Transactional
         public ScfBankRegistrationResponse registerBank(ScfBankRegistrationRequest request)  {
@@ -1049,4 +1109,250 @@ public class SupplyChainService {
         }        
         
         
+        
+     ///////////////////////////////////SCF Bank Financing Offer Terms Service class///////////////////
+        
+        public ScfbankFinancingOfferTermsResponse saveTerms(ScfbankFinancingOfferTermsRequest request) {
+        	ScfbankFinancingOfferTermsEntity entity = new ScfbankFinancingOfferTermsEntity();
+            entity.setInterestRateRange(request.getInterestRateRange());
+            entity.setRepaymentSchedule(request.getRepaymentSchedule());
+            entity.setRepaymentNote(request.getRepaymentNote());
+            entity.setProcessingFeesRange(request.getProcessingFeesRange());
+            entity.setProcessingNote(request.getProcessingNote());
+
+            ScfbankFinancingOfferTermsEntity saved = scfbankFinancingOfferTermsRepository.save(entity);
+
+            ScfbankFinancingOfferTermsResponse response = new ScfbankFinancingOfferTermsResponse();
+            response.setId(saved.getId());
+            response.setInterestRateRange(saved.getInterestRateRange());
+            response.setRepaymentSchedule(saved.getRepaymentSchedule());
+            response.setRepaymentNote(saved.getRepaymentNote());
+            response.setProcessingFeesRange(saved.getProcessingFeesRange());
+            response.setProcessingNote(saved.getProcessingNote());
+
+            return response;
+        }
+
+        public List<ScfbankFinancingOfferTermsResponse> getAllTerms() {
+            return scfbankFinancingOfferTermsRepository.findAll().stream().map(entity -> {
+            	ScfbankFinancingOfferTermsResponse res = new ScfbankFinancingOfferTermsResponse();
+                res.setId(entity.getId());
+                res.setInterestRateRange(entity.getInterestRateRange());
+                res.setRepaymentSchedule(entity.getRepaymentSchedule());
+                res.setRepaymentNote(entity.getRepaymentNote());
+                res.setProcessingFeesRange(entity.getProcessingFeesRange());
+                res.setProcessingNote(entity.getProcessingNote());
+                return res;
+            }).collect(Collectors.toList());
+        }
+        
+        
+        
+  //////////////////////////////////SCF Bank Fund Disbursement Service class/////////////////
+        
+        
+        public ScfBankFundDisbursementEntity save(ScfBankFundDisbursementRequest request) {
+        	ScfBankFundDisbursementEntity entity = new ScfBankFundDisbursementEntity();
+            entity.setInvoiceNumber(request.getInvoiceNumber());
+            entity.setMessage(request.getMessage());
+            entity.setStatus(request.getStatus());
+            entity.setFundtype(request.getFundtype());
+            entity.setAmount(request.getAmount());
+            return scfBankFundDisbursementRepository.save(entity); // date/time set automatically via @PrePersist
+        } 
+       
+        public List<ScfBankFundDisbursementResponse> getAllDis() {
+            return scfBankFundDisbursementRepository.findAllByOrderByDateDescTimeDesc().stream().map(entity -> {
+            	ScfBankFundDisbursementResponse res = new ScfBankFundDisbursementResponse();
+                res.setMessage(entity.getMessage());
+                res.setInvoiceNumber(entity.getInvoiceNumber());
+                res.setStatus(entity.getStatus());
+                res.setFundtype(entity.getFundtype());
+                res.setDate(entity.getDate());
+                res.setTime(entity.getTime());
+                res.setAmount(entity.getAmount());
+                return res;
+            }).collect(Collectors.toList());
+        }
+        
+        
+        public Map<String, Object> getSummary() {
+            List<ScfBankFundDisbursementEntity> all = scfBankFundDisbursementRepository.findAll();
+            BigDecimal totalAmount = all.stream().map(e -> e.getAmount() != null ? e.getAmount() : BigDecimal.ZERO).reduce(BigDecimal.ZERO, BigDecimal::add);
+            long completed = all.stream().filter(e -> "Completed".equalsIgnoreCase(e.getStatus())).count();
+            long requested = all.stream().filter(e -> "Requested".equalsIgnoreCase(e.getStatus())).count();
+
+            Map<String, Object> map = new HashMap<>();
+            map.put("totalAmount", totalAmount);
+            map.put("completedTransfers", completed);
+            map.put("requestedTransfers", requested);
+            return map;
+        }
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        ////////////////////////////////SCF SUPPLIER SCREEN SERVICE CLASS CODE////////////////////////
+        
+        //////////////////Scf Supplier screen Registration Api service class///////////////////
+        
+        
+        @Transactional
+        public ScfSupplierRegistrationResponse registerSupplier(ScfSupplierRegistrationRequest request)  {
+        	
+        	logger.info("Processing user registration for phone number: {}", request.getMobileNo());
+
+            // Check if phone number already exists
+            if (scfSupplierRegistrationRepository.findByMobileNo(request.getMobileNo()).isPresent()) {
+                throw new PhoneNumberAlreadyExistsException("Mobile number already exists.");
+            }
+
+            // Check if email ID already exists
+            if (scfSupplierRegistrationRepository.findByEmailId(request.getEmailId()).isPresent()) {
+                throw new EmailIdAlreadyExistsException("Email Id already exists.");
+            }
+        
+        	
+            // Save Supplier Registration 
+            
+            ScfSupplierRegistrationEntity entity = new ScfSupplierRegistrationEntity();
+           
+            entity.setFirstName(request.getFirstName());
+            entity.setLastName(request.getLastName());
+            entity.setMobileNo(request.getMobileNo());
+            entity.setEmailId(request.getEmailId());
+            entity.setSupplierId(request.getSupplierId());
+            
+            scfSupplierRegistrationRepository.save(entity);
+            
+            
+            
+         // Create Response
+            ScfSupplierRegistrationResponse response = new ScfSupplierRegistrationResponse();
+            response.setMessage("Scf Supplier registration successfuly Completed!");
+          
+            return response;
+        
+            
+        }
+        
+        
+        
+        
+    ///////////////////////BANK OFFER SUPPLIER SCREEN SERVICE CLASS CODE//////////////////
+        ///scfSupplierBankOfferRepository.
+        ///scfSupplierSelectedbankOfferRepository
+        
+        public void addOffer(ScfAddBankOfferRequest request) {
+            ScfSupplierBankOfferEntity offer = new ScfSupplierBankOfferEntity();
+            offer.setBankName(request.getBankName());
+            offer.setInterestRate(request.getInterestRate());
+            offer.setTermInYears(request.getTermInYears());
+            offer.setImageUrl(request.getImageUrl());
+            scfSupplierBankOfferRepository.save(offer);
+        }
+
+        public List<ScfSupplierBankOfferResponse> getAllOffers() {
+            List<ScfSupplierBankOfferEntity> offers = scfSupplierBankOfferRepository.findAll();
+            return offers.stream().map(offer -> {
+                ScfSupplierBankOfferResponse res = new ScfSupplierBankOfferResponse();
+                res.setId(offer.getId());
+                res.setBankName(offer.getBankName());
+                res.setInterestRate(offer.getInterestRate());
+                res.setTermInYears(offer.getTermInYears());
+                res.setImageUrl(offer.getImageUrl());
+
+                scfSupplierSelectedbankOfferRepository.findByOffer_Id(offer.getId()).ifPresent(selected -> {
+                    res.setSelected(true);
+                    res.setProceed(selected.isProceed());
+                    res.setInvoiceNumber(selected.getInvoiceNumber());
+                });
+
+                return res;
+            }).collect(Collectors.toList());
+        }
+
+        public void selectOffer(ScfSelectBankOfferRequest request) {
+            ScfSupplierBankOfferEntity offer = scfSupplierBankOfferRepository.findById(request.getOfferId())
+                    .orElseThrow(() -> new RuntimeException("Offer not found"));
+
+            ScfSupplierSelectedbankOfferEntity selected = new ScfSupplierSelectedbankOfferEntity();
+            selected.setOffer(offer);
+            selected.setProceed(false);
+            selected.setInvoiceNumber("");
+            scfSupplierSelectedbankOfferRepository.save(selected);
+        }
+
+        public void addInvoice(ScfAddInvoiceBankOfferRequest request) {
+            ScfSupplierSelectedbankOfferEntity selected = scfSupplierSelectedbankOfferRepository.findByOffer_Id(request.getOfferId())
+                    .orElseThrow(() -> new RuntimeException("Offer not selected"));
+            selected.setInvoiceNumber(request.getInvoiceNumber());
+            scfSupplierSelectedbankOfferRepository.save(selected);
+        }
+
+        public void markProceed(ScfSelectBankOfferRequest request) {
+            ScfSupplierSelectedbankOfferEntity selected = scfSupplierSelectedbankOfferRepository.findByOffer_Id(request.getOfferId())
+                    .orElseThrow(() -> new RuntimeException("Offer not selected"));
+            selected.setProceed(true);
+            scfSupplierSelectedbankOfferRepository.save(selected);
+        }
+        
+        
+        /////////////////////////////////Early Payment Request API Service class//////////////////////
+        
+        
+        
+        /*public EarlyPaymentResponse createEarlyPaymentRequest(EarlyPaymentRequest request) {
+            logger.info("Received Early Payment Request for Invoice Number: {}", request.getInvoiceNumber());
+
+            EarlyPaymentRequestEntity entity = new EarlyPaymentRequestEntity();
+            BeanUtils.copyProperties(request, entity);
+
+            EarlyPaymentRequestEntity saved = earlyPaymentRequestRepository.save(entity);
+            logger.info("Early Payment Request saved successfully with ID: {}", saved.getId());
+
+            EarlyPaymentResponse response = new EarlyPaymentResponse();
+            response.setMessage("Early Payment Request submitted successfully.");
+            response.setInvoiceNumber(saved.getInvoiceNumber());
+            response.setFinancingAmount(saved.getFinancingAmount());
+
+            return response;
+        }*/
+        
+        @Transactional
+        public EarlyPaymentResponse submitRequest(EarlyPaymentRequest request) {
+            logger.info("Submitting early payment request for invoice: {}", request.getInvoiceNumber());
+            
+            // Validate invoice number uniqueness
+            if (earlyPaymentRequestRepository.existsByInvoiceNumber(request.getInvoiceNumber())) {
+                logger.error("Duplicate invoice number: {}", request.getInvoiceNumber());
+                throw new RuntimeException("Invoice number already exists.");
+            }
+
+            try {
+                // Convert DTO to Entity
+                EarlyPaymentRequestEntity entity = new EarlyPaymentRequestEntity();
+                BeanUtils.copyProperties(request, entity);
+                
+                // Save to database
+                EarlyPaymentRequestEntity savedEntity = earlyPaymentRequestRepository.save(entity);
+                logger.info("Successfully saved early payment request with ID: {}", savedEntity.getId());
+                
+                // Return response
+                return new EarlyPaymentResponse(
+                    "Early payment request submitted successfully.",
+                    savedEntity.getInvoiceNumber(),
+                    savedEntity.getId(),
+                    savedEntity.getFinancingAmount()
+                );
+            } catch (Exception e) {
+                logger.error("Error saving early payment request", e);
+                throw new RuntimeException("Failed to submit early payment request", e);
+            }
+        }
 }
