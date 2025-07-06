@@ -182,21 +182,9 @@ public class SCF_Controller {
 	
 	
 	
-	///////////////////SCF User Update Details APIs / Get User By phone/ Email /////////////////////
-	
-	/*@GetMapping("/get-scf-user-deatls-by-mobile/{mobileNumber}")
-    public ResponseEntity<SCFuserupdatedetailsS7Entity> getUserByMobileNumber(@PathVariable String mobileNumber) {
-        Optional<SCFuserupdatedetailsS7Entity> user = supplyChainService.getUserDetailsByMobileNumber(mobileNumber);
-        return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
-    }
 	
 	
-	@GetMapping("/get-scf-user-deatls-by-email/{emailId}")
-    public ResponseEntity<SCFuserupdatedetailsS7Entity> getUserByEmailId(@PathVariable String emailId) {
-        Optional<SCFuserupdatedetailsS7Entity> user = supplyChainService.getUserDetailsByEmailId(emailId);
-        return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
-    }*/
-	
+///////////////////SCF User Update Details APIs / Get User By phone/ Email /////////////////////	
 	
 	@PutMapping("/Update-SCF-Userdetails-by-mobile/{mobileNumber}")
     public ResponseEntity<SCFuserupdatedetailsS7Entity> updateUserByMobileNumber(@PathVariable String mobileNumber, @RequestBody SCFuserupdatedetailsS7Entity updatedDetails) {
@@ -217,6 +205,7 @@ public class SCF_Controller {
     
     @PostMapping("/register-scf-user")
     public ResponseEntity<UserRegistrationResponse> registerUser(@RequestBody UserRegistrationRequest request) {
+    	logger.info("Received user registration request for: {}", request.getFirstname());
         UserRegistrationResponse response = supplyChainService.registerUser(request);
         return ResponseEntity.ok(response);
     }
@@ -228,6 +217,7 @@ public class SCF_Controller {
     
     @PostMapping("/scf-create-invoice-application")
     public ResponseEntity<ScfApplicationResponse> createInvoice(@RequestBody ScfApplicationRequest request) {
+    	logger.info("Creating SCF invoice application for invoice number: {}", request.getUserId());
         ScfApplicationResponse response = supplyChainService.createInvoice(request);
         return ResponseEntity.ok(response);
     }
@@ -239,6 +229,7 @@ public class SCF_Controller {
     
     @PostMapping("/get-all-invoice-list")
     public List<GetApplicationResponse> getApplications(@RequestBody GetApplicationRequest request) {
+    	logger.info("Fetching all invoice list for user_id: {}", request.getUserId());
         return supplyChainService.getApplicationsByUserId(request);
     }
     
@@ -248,6 +239,7 @@ public class SCF_Controller {
     
     @PostMapping("/get-application-details-s1-s6")
     public ResponseEntity<GetApplicationDetailsResponse> getApplicationDetails(@Valid @RequestBody GetApplicationDetailsRequest request) {
+    	logger.info("Fetching application details for invoice number: {}", request.getInvoiceNumber());
     	GetApplicationDetailsResponse response = supplyChainService.getApplicationDetailsByInvoiceNumber(request.getInvoiceNumber());
         return ResponseEntity.ok(response);
     }
@@ -258,12 +250,14 @@ public class SCF_Controller {
     
     @PostMapping("/create-scf-financing-request")
     public ResponseEntity<ScfFinancingRequestResponse> create(@RequestBody ScfFinancingRequestRequest request) {
+    	 logger.info("Creating SCF financing request for invoice number: {}", request.getInvoiceNumber());
         ScfFinancingRequestResponse response = supplyChainService.createRequest(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @GetMapping("/Get-all-financing-requests")
     public ResponseEntity<List<ScfFinancingRequestResponse>> getAllRequests() {
+    	logger.info("Fetching all SCF financing requests");
         return ResponseEntity.ok(supplyChainService.getAllRequests());
     }
     
@@ -273,6 +267,7 @@ public class SCF_Controller {
     
     @PostMapping("/register-scf-bank")
     public ResponseEntity<ScfBankRegistrationResponse> registerBank(@RequestBody ScfBankRegistrationRequest request) {
+    	logger.info("Registering SCF bank with name: {}", request.getFirstName());
     	ScfBankRegistrationResponse response = supplyChainService.registerBank(request);
         return ResponseEntity.ok(response);
     }
@@ -284,11 +279,13 @@ public class SCF_Controller {
     
     @PostMapping("/scf-bank-notification")
     public ScfFinancingRequestNotificationResponse create(@RequestBody ScfFinancingRequestNotificationRequest request) {
+    	logger.info("Creating bank notification for invoice: {}", request.getInvoiceNumber());
         return supplyChainService.createNotification(request);
     }
     
     @GetMapping("/scf-bank-notification")
     public List<ScfFinancingRequestNotificationResponse> getAll() {
+    	logger.info("Fetching all bank notifications");
         return supplyChainService.getAllNotifications();
     }
     
@@ -299,16 +296,19 @@ public class SCF_Controller {
     
     @PostMapping("/create-bank-risk-assessment")
     public ResponseEntity<ScfbankRiskAssessmentResponse> create(@RequestBody ScfbankRiskAssessmentRequest request) {
+    	logger.info("Creating bank risk assessment for invoice number: {}", request.getInvoiceNumber());
         return ResponseEntity.ok(supplyChainService.createAssessment(request));
     }
 
     @GetMapping("/Get-all-bank-risk-assessment")
     public ResponseEntity<List<ScfbankRiskAssessmentResponse>> getAllAssessments() {
+    	logger.info("Fetching all bank risk assessments");
         return ResponseEntity.ok(supplyChainService.getAllAssessments());
     }
 
     @GetMapping("/Get-risk-assesmenst-by-invoice/{invoiceNumber}")
     public ResponseEntity<List<ScfbankRiskAssessmentResponse>> getByInvoice(@PathVariable String invoiceNumber) {
+    	logger.info("Fetching risk assessments for invoice number: {}", invoiceNumber);
         return ResponseEntity.ok(supplyChainService.getAssessmentsByInvoice(invoiceNumber));
     }
     
@@ -318,11 +318,13 @@ public class SCF_Controller {
     
     @PostMapping("/Create-scf-bank-Financing-offer")
     public ResponseEntity<ScfbankFinancingOfferTermsResponse> save(@RequestBody ScfbankFinancingOfferTermsRequest request) {
+    	logger.info("Creating financing offer for invoice number: {}", request.getInterestRateRange());
         return new ResponseEntity<>(supplyChainService.saveTerms(request), HttpStatus.CREATED);
     }
 
     @GetMapping("/Get-all-scf-bank-Financing-offer")
     public ResponseEntity<List<ScfbankFinancingOfferTermsResponse>> getAllTerms() {
+    	logger.info("Fetching all financing offers");
         return new ResponseEntity<>(supplyChainService.getAllTerms(), HttpStatus.OK);
     }
     
@@ -331,16 +333,19 @@ public class SCF_Controller {
     
     @PostMapping("/Add-scf-bank-disbursement")
     public ResponseEntity<ScfBankFundDisbursementEntity> add(@RequestBody ScfBankFundDisbursementRequest request) {
+    	 logger.info("Adding bank fund disbursement for invoice: {}", request.getInvoiceNumber());
         return ResponseEntity.ok(supplyChainService.save(request));
     }
 
     @GetMapping("/Get-all-bank-disbursement")
     public ResponseEntity<List<ScfBankFundDisbursementResponse>>getAllDis() {
+    	logger.info("Fetching all bank fund disbursements");
         return ResponseEntity.ok(supplyChainService.getAllDis());
     }
 
     @GetMapping("/Get-summary-bank-disbursement")
     public ResponseEntity<Map<String, Object>> getSummary() {
+    	logger.info("Fetching fund disbursement summary");
         return ResponseEntity.ok(supplyChainService.getSummary());
     }
     

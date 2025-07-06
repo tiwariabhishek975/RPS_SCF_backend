@@ -1,6 +1,7 @@
 package com.SCF.SupplyChain.service;
 import java.math.BigDecimal;
 
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -608,19 +609,6 @@ public class SupplyChainService {
     
     
     
-    /*@Transactional
-    public Optional<SCFuserupdatedetailsS7Entity> getUserDetailsByMobileNumber(String mobileNumber) {
-        logger.info("Fetching user details for mobileNumber: {}", mobileNumber);
-        return scfuserupdatedetailsS7Repository.findByPhoneNo(mobileNumber);
-    }*/
-
-   /* @Transactional
-    public Optional<SCFuserupdatedetailsS7Entity> getUserDetailsByEmailId(String emailId) {
-        logger.info("Fetching user details for emailId: {}", emailId);
-        return scfuserupdatedetailsS7Repository.findByEmailId(emailId);
-    }*/
-    
-    
     @Transactional
     public SCFuserupdatedetailsS7Entity updateUserDetailsByMobileNumber(String mobileNumber, SCFuserupdatedetailsS7Entity updatedDetails) {
         logger.info("Updating user details for mobileNumber: {}", mobileNumber);
@@ -824,17 +812,6 @@ public class SupplyChainService {
         UserRegistrationResponse response = new UserRegistrationResponse();
         response.setMessage("User registration successful!");
         response.setUserId(user.getUserId());
-        // response.setFullName(user.getFullName());
-        /*response.setEmailAddress(user.getEmailAddress());
-        response.setPhoneNumber(user.getPhoneNumber());
-        response.setCompanyName(user.getCompanyName());
-        response.setAccountStatus(user.getAccountStatus());
-        response.setPreferredLanguage(user.getPreferredLanguage());
-        response.setRoleName(userRole.getRoleName());
-        response.setOrgName(orgDetails.getOrgName());
-        response.setOrgRoleName(orgRole.getOrgRoleName());*/
-        
-
         return response;
     
         
@@ -968,19 +945,6 @@ public class SupplyChainService {
                     .collect(Collectors.toList());
         }
 
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-       
         
 /////////////////////////////////////SCF Bank Side Service Class////////////////////////////////////////  
       
