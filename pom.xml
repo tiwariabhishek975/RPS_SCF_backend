@@ -9,7 +9,7 @@
 		<version>2.7.16</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.SCF</groupId>
+	<groupId>com.SupplyChain</groupId>
 	<artifactId>SupplyChain</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>SupplyChain</name>

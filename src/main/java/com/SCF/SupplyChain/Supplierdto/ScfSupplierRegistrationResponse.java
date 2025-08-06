@@ -1,18 +1,20 @@
-package com.SCF.SupplyChain.dto;
+package com.SCF.SupplyChain.Supplierdto;
 
-public class SupplyChainDetailsS5Response {
+import lombok.Data;
+
+@Data
+public class ScfSupplierRegistrationResponse {
 	
 	private String message;
-    //private SupplyChainDetailsS5Entity user;
+
 	public String getMessage() {
 		return message;
 	}
+
 	public void setMessage(String message) {
 		this.message = message;
 	}
 	
-    
-    
-    
+	
 
 }
